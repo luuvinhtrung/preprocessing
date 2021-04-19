@@ -3,6 +3,31 @@ from dateutil.relativedelta import relativedelta
 import pandas as pd
 import numpy as np
 import collections
+import requests
+
+def get_coordinate_by_address_and_name(address,name):
+    #print('https://maps.googleapis.com/maps/api/geocode/json?address='+name+''+address+'&key=AIzaSyAqLbiJqRknvVHhX8tqHrawpwZwKQvKScg')
+    return requests.get('https://maps.googleapis.com/maps/api/geocode/json?address='+name+''+address+'&key=AxIzaSyAqLbiJqRknvVHhX8tqHrawpwZwKQvKScxg').json()['results']
+    #result = requests.get('https://maps.googleapis.com/maps/api/distancematrix/json?origins=' + origin + '&destinations=' + destination + '&key=AxIzaSyAqLbiJqRknvVHhX8tqHrawpwZwKQvKScxg').json()
+
+
+def get_list(address_list_1, address_list_2):
+    #i = 0
+    data_list = []
+    for origin in address_list_1:
+        min = 100000
+        for destination in address_list_2:
+            result = requests.get('sth').json()
+            if result["rows"][0]["elements"][0]["distance"]["value"] < min:
+                min = result["rows"][0]["elements"][0]["distance"]["value"]
+                nearest_destination = destination
+        data_list.append([origin.replace('+', '－'),nearest_destination.replace('+', '－'),str(min)])
+        # new_row = pd.Series({"origin": origin, "nearest_destination": nearest_destination, "distance": str(min)})
+        #df = df.append([origin,nearest_destination,str(min)], ignore_index=True)
+        #df.loc[len(df)] =
+        #i+=1
+
+    df = pd.DataFrame(data_list,columns=['pharmacy', 'nearest_hospital', 'distance (in meter)'])
 
 def kill_underscore(row,feature,labels,flag):
     lst = row[feature].split('_')
@@ -75,6 +100,7 @@ def get_combination_data(file_list):
         df = pd.read_csv('D:/data/'+filename+'.csv')
         #if filename == 'MedicalInstitute_Coordinate1':
         df = df[df['Longitude']!=-1]
+        df = df[df['Institution'].isna() == False]
         combination_key = create_combination_key(df['Longitude'], df['Latitude'])
         df['Coordinate'] = combination_key
         #df = df[df['Medical institution name'].isna()==False]
@@ -103,12 +129,14 @@ def get_combination_data(file_list):
             key = key.split('_')
             key = '(' + key[0] + '.' + key[1] + ', ' + key[2]+ '.' + key[3] + ')'
             coor_list.append([key] * len(value))
+            #client_list.append(list(map(int, value)))
 
     coor_list = [item for sublist in coor_list for item in sublist]
     address_list = [item for sublist in address_list for item in sublist]
     result = list(zip(coor_list,address_list))
     final_result = pd.DataFrame(result, columns =['Coordinate', 'Address'])
     final_result.to_csv('Address_Coordinate_Duplicate.csv',index=False)
+    # address_list = [item for item, count in collections.Counter(address_list).items() if count > 1]
 
 ############################################################################################################################
 import os
@@ -146,3 +174,11 @@ for file in files:  # loop through Excel files
         # df_total['Type'] = get_flat_list(type_list)
         df_total.to_csv('total.csv')
         print()
+
+######################################################################################################################################################
+
+# if len(result) > 0:
+#         location = result[0]['geometry']['location']
+#         # print(result)
+#         new_lat_list.append(location['lat'])
+#         new_long_list.append(location['lng'])
